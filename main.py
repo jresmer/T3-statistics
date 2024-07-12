@@ -53,13 +53,20 @@ class EmpiricModel:
             self.class_percentages[i] = len(ki) * c
             self.class_frequencies[i] = len(ki)
             self.X[i] = (ki[0]["range"][0] + ki[0]["range"][1]) * 0.5
-            gp_avg += self.X[i] * len(ki)
+            gp_avg += self.X[i] * len(ki) / l
             for ind in ki:
                 if ind["price"] not in counting.keys():
                     counting[ind["price"]] = 0
                 counting[ind["price"]] += 1
         # determining mode
-        self.metrics["Mode"] = max(counting)
+        max_occur = max((ind for ind in counting.values()))
+        mode = list(key for key in counting.keys() if counting[key] == max_occur)
+        sum_ = mode[0]
+        if len(mode) > 1:
+            for v in mode[1:]:
+                sum_ += v
+            sum_ = sum_ / len(mode)
+        self.metrics["Mode"] = sum_
         # determining median
         prices = list(counting.keys())
         prices.sort()
@@ -83,7 +90,6 @@ class EmpiricModel:
         self.metrics["MoAssymmetry"] = (self.metrics["Average"] - self.metrics["Mode"]) / self.metrics["Standard Deviation"]
         self.metrics["MdAssymmetry"] = (self.metrics["Average"] - self.metrics["Median"]) / self.metrics["Standard Deviation"]
         # determining grouped average
-        gp_avg *= c
         self.grouped_metrics["Average"] = gp_avg
         # determining grouped median
         total_perc = 0
